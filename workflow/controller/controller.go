@@ -388,6 +388,7 @@ func (wfc *WorkflowController) podGarbageCollector(stopCh <-chan struct{}) {
 		case <-stopCh:
 			return
 		case pod := <-wfc.gcPods:
+			startTime := time.Now()
 			parts := strings.Split(pod, "/")
 			if len(parts) != 2 {
 				log.WithFields(log.Fields{"pod": pod}).Warn("Unexpected item on gcPods channel")
@@ -401,6 +402,7 @@ func (wfc *WorkflowController) podGarbageCollector(stopCh <-chan struct{}) {
 			} else {
 				log.WithFields(log.Fields{"namespace": namespace, "pod": podName}).Info("Delete pod for gc successfully")
 			}
+			wfc.metrics.UpdatePodDeletionLatency(time.Since(startTime).Milliseconds())
 		}
 	}
 }
