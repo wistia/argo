@@ -403,6 +403,7 @@ func (wfc *WorkflowController) podGarbageCollector(stopCh <-chan struct{}) {
 				log.WithFields(log.Fields{"namespace": namespace, "pod": podName}).Info("Delete pod for gc successfully")
 			}
 			wfc.metrics.UpdatePodDeletionLatency(time.Since(startTime).Milliseconds())
+			wfc.metrics.IncrementPodGCRemovedFromQueue()
 		}
 	}
 }
@@ -601,6 +602,7 @@ func (wfc *WorkflowController) processNextItem() bool {
 			for podName := range woc.completedPods {
 				pod := fmt.Sprintf("%s/%s", woc.wf.ObjectMeta.Namespace, podName)
 				woc.controller.gcPods <- pod
+				wfc.metrics.IncrementPodGCAddedToQueue()
 			}
 		}
 	}

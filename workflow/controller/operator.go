@@ -575,10 +575,12 @@ func (woc *wfOperationCtx) persistUpdates() {
 		case wfv1.PodGCOnPodSuccess:
 			for podName := range woc.succeededPods {
 				woc.controller.gcPods <- fmt.Sprintf("%s/%s", woc.wf.ObjectMeta.Namespace, podName)
+				woc.controller.metrics.IncrementPodGCAddedToQueue()
 			}
 		case wfv1.PodGCOnPodCompletion:
 			for podName := range woc.completedPods {
 				woc.controller.gcPods <- fmt.Sprintf("%s/%s", woc.wf.ObjectMeta.Namespace, podName)
+				woc.controller.metrics.IncrementPodGCAddedToQueue()
 			}
 		}
 	} else {

@@ -57,6 +57,8 @@ type Metrics struct {
 
 	// Custom Wistia metrics
 	podDeletionLatency prometheus.Gauge
+	podGCAddedToQueue  prometheus.Counter
+	podGCRemovedFromQueue prometheus.Counter
 }
 
 func (m *Metrics) Levels() []log.Level {
@@ -88,6 +90,8 @@ func New(metricsConfig, telemetryConfig ServerConfig) *Metrics {
 			Help: "Total number of log messages.",
 		}, []string{"level"}),
 		podDeletionLatency: newGauge("wcustom_pod_deletion_latency", "Latency for pod deletion (ms)", nil),
+		podGCAddedToQueue: newCounter("wcustom_pod_gc_added_to_queue", "Pod GC requests added to queue", nil),
+		podGCRemovedFromQueue: newCounter("wcustom_pod_gc_removed_from_queue", "Pod GC requests removed from queue", nil),
 	}
 
 	for _, metric := range metrics.allMetrics() {
@@ -111,6 +115,8 @@ func (m *Metrics) allMetrics() []prometheus.Metric {
 		m.workflowsProcessed,
 		m.operationDurations,
 		m.podDeletionLatency,
+		m.podGCAddedToQueue,
+		m.podGCRemovedFromQueue,
 	}
 	for _, metric := range m.workflowsByPhase {
 		allMetrics = append(allMetrics, metric)
@@ -129,6 +135,14 @@ func (m *Metrics) allMetrics() []prometheus.Metric {
 
 func (m *Metrics) UpdatePodDeletionLatency(latencyMs int64) {
 	m.podDeletionLatency.Set(float64(latencyMs))
+}
+
+func (m *Metrics) IncrementPodGCAddedToQueue() {
+	m.podGCAddedToQueue.Inc()
+}
+
+func (m *Metrics) IncrementPodGCRemovedFromQueue() {
+	m.podGCRemovedFromQueue.Inc()
 }
 
 func (m *Metrics) StopRealtimeMetricsForKey(key string) {
