@@ -842,6 +842,7 @@ func (wfc *WorkflowController) newPodInformer() cache.SharedIndexInformer {
 				if err != nil {
 					return
 				}
+				wfc.metrics.IncrementPodInformerAddPod()
 				wfc.podQueue.Add(key)
 			},
 			UpdateFunc: func(old, new interface{}) {
@@ -849,6 +850,7 @@ func (wfc *WorkflowController) newPodInformer() cache.SharedIndexInformer {
 				if err != nil {
 					return
 				}
+				wfc.metrics.IncrementPodInformerUpdatePod()
 				oldPod, newPod := old.(*apiv1.Pod), new.(*apiv1.Pod)
 				if oldPod.ResourceVersion == newPod.ResourceVersion {
 					return
@@ -863,6 +865,8 @@ func (wfc *WorkflowController) newPodInformer() cache.SharedIndexInformer {
 			DeleteFunc: func(obj interface{}) {
 				// IndexerInformer uses a delta queue, therefore for deletes we have to use this
 				// key function.
+
+				wfc.metrics.IncrementPodInformerDeletePod()
 
 				// Enqueue the workflow for deleted pod
 				_ = wfc.enqueueWfFromPodLabel(obj)
