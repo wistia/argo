@@ -511,6 +511,11 @@ func (wfc *WorkflowController) runWorker() {
 
 // processNextItem is the worker logic for handling workflow updates
 func (wfc *WorkflowController) processNextItem() bool {
+	startProcTime := time.Now()
+	defer func() {
+		wfc.metrics.UpdateProcessNextItemDuration(time.Since(startProcTime).Milliseconds())
+	}()
+
 	key, quit := wfc.wfQueue.Get()
 	if quit {
 		return false

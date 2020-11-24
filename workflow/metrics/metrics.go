@@ -62,6 +62,7 @@ type Metrics struct {
 	podInformerAddPod prometheus.Counter
 	podInformerUpdatePod prometheus.Counter
 	podInformerDeletePod prometheus.Counter
+	processNextItemDuration prometheus.Gauge
 }
 
 func (m *Metrics) Levels() []log.Level {
@@ -98,6 +99,7 @@ func New(metricsConfig, telemetryConfig ServerConfig) *Metrics {
 		podInformerAddPod: newCounter("wcustom_pod_informer_add_pod", "Pod informer notified that a pod was added", nil),
 		podInformerUpdatePod: newCounter("wcustom_pod_informer_update_pod", "Pod informer notified that a pod was updated", nil),
 		podInformerDeletePod: newCounter("wcustom_pod_informer_delete_pod", "Pod informer notified that a pod was deleted", nil),
+		processNextItemDuration: newGauge("wcustom_process_next_item_duration", "Latency for processNextItem (ms)", nil),
 	}
 
 	for _, metric := range metrics.allMetrics() {
@@ -126,6 +128,7 @@ func (m *Metrics) allMetrics() []prometheus.Metric {
 		m.podInformerAddPod,
 		m.podInformerUpdatePod,
 		m.podInformerDeletePod,
+		m.processNextItemDuration,
 	}
 	for _, metric := range m.workflowsByPhase {
 		allMetrics = append(allMetrics, metric)
@@ -164,6 +167,10 @@ func (m *Metrics) IncrementPodInformerUpdatePod() {
 
 func (m *Metrics) IncrementPodInformerDeletePod() {
 	m.podInformerDeletePod.Inc()
+}
+
+func (m *Metrics) UpdateProcessNextItemDuration(latencyMs int64) {
+	m.processNextItemDuration.Set(float64(latencyMs))
 }
 
 func (m *Metrics) StopRealtimeMetricsForKey(key string) {
