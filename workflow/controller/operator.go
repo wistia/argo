@@ -1593,6 +1593,7 @@ func (woc *wfOperationCtx) executeTemplate(nodeName string, orgTmpl wfv1.Templat
 	if time.Now().UTC().After(woc.deadline) {
 		woc.log.Warnf("Deadline exceeded")
 		woc.requeue(defaultRequeueTime)
+		woc.controller.metrics.IncrementDeadlineExceeded()
 		return node, ErrDeadlineExceeded
 	}
 

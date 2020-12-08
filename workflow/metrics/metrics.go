@@ -65,6 +65,7 @@ type Metrics struct {
 	processNextItemDuration prometheus.Gauge
 	workflowQueueDepth prometheus.Gauge
 	podQueueDepth      prometheus.Gauge
+	deadlineExceeded   prometheus.Counter
 }
 
 func (m *Metrics) Levels() []log.Level {
@@ -104,6 +105,7 @@ func New(metricsConfig, telemetryConfig ServerConfig) *Metrics {
 		processNextItemDuration: newGauge("wcustom_process_next_item_duration", "Latency for processNextItem (ms)", nil),
 		workflowQueueDepth: newGauge("wcustom_workflow_queue_depth", "Depth of workflow queue", nil),
 		podQueueDepth: newGauge("wcustom_pod_queue_depth", "Depth of pod queue", nil),
+		deadlineExceeded: newCounter("wcustom_deadline_exceeded", "Deadline exceeded", nil),
 	}
 
 	for _, metric := range metrics.allMetrics() {
@@ -135,6 +137,7 @@ func (m *Metrics) allMetrics() []prometheus.Metric {
 		m.processNextItemDuration,
 		m.workflowQueueDepth,
 		m.podQueueDepth,
+		m.deadlineExceeded,
 	}
 	for _, metric := range m.workflowsByPhase {
 		allMetrics = append(allMetrics, metric)
@@ -185,6 +188,10 @@ func (m *Metrics) UpdateWorkflowQueueDepth(depth int) {
 
 func (m *Metrics) UpdatePodQueueDepth(depth int) {
 	m.podQueueDepth.Set(float64(depth))
+}
+
+func (m *Metrics) IncrementDeadlineExceeded() {
+	m.deadlineExceeded.Inc()
 }
 
 func (m *Metrics) StopRealtimeMetricsForKey(key string) {
